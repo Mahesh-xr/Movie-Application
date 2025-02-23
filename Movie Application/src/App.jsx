@@ -1,18 +1,27 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import Search from "./Components/Search";
 
-import React from 'react'
+import "./App.css";
+
+import React from "react";
 
 const App = () => {
+  const[searchItem,setSearch]=useState('hi sample test')
   return (
-    <div>
-      <h1 className='text-red-500'>Hi Friends</h1>
-    </div>
-  )
-}
+    <main>
+      <div className="pattern" />
+      <div className="wrapper">
+        <header>
+          <img src="./hero.png" alt="hero banner" />
+          <h1 className="">
+            Find <span className="text-gradient">Movies</span> You'll Enjoy
+            Without Hassel
+          </h1>
+          <Search searchItem={searchItem} setSearchItem = {setSearch}/>
+        </header>
+      </div>
+    </main>
+  );
+};
 
-export default App
-
-
+export default App;
