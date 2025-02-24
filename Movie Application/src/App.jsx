@@ -1,5 +1,7 @@
 import { useState, useEffect, use } from "react";
 import Search from "./Components/Search";
+import Spinner from "./Components/Spinner";
+import MovieCard from "./Components/MovieCard";
 import axios from "axios";
 
 import "./App.css";
@@ -9,10 +11,10 @@ const API_KEY = import.meta.env.VITE_TMDB_API_KEY; // Replace with your TMDB API
 const BASE_URL = "https://api.themoviedb.org/3";
 
 const App = () => {
-  const [searchItem, setSearch] = useState("hi sample test");
+  const [searchItem, setSearch] = useState("");
   const [allMovies, setMovies] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // configuration for fetching the data
   const config = {
@@ -68,15 +70,15 @@ const App = () => {
           <Search searchItem={searchItem} setSearchItem={setSearch} />
         </header>
         <section className="all-movies">
-          <h2>All Movies</h2>
+          <h2 className="mt-[20px]">All Movies</h2>
           {isLoading ? (
-            <p className="text-white-500">Loading...</p>
+            <Spinner/>
           ) : errorMessage ? (
             <p className="text-red-500">{errorMessage}</p>
           ) : (
             <ul>
               {allMovies.map((movie) => (
-                <li className="text-white">{movie.title}</li>
+                <MovieCard key={movie.id} movie={movie}/>
               ))}
             </ul>
           )}
