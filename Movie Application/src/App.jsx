@@ -1,12 +1,16 @@
-import { useState, useEffect, use } from "react";
+import React from "react";
+import { useState, useEffect } from "react";
+import {useDebounce} from 'react-use'
 import Search from "./Components/Search";
 import Spinner from "./Components/Spinner";
 import MovieCard from "./Components/MovieCard";
+import { updatedSearchCount } from "./AppWrite";
 import axios from "axios";
 
 import "./App.css";
 
-import React from "react";
+
+
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY; // Replace with your TMDB API key
 const BASE_URL = "https://api.themoviedb.org/3";
 
@@ -15,6 +19,9 @@ const App = () => {
   const [allMovies, setMovies] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [debouncedSearchItem, setDebouncedSearchItem] = useState("")
+
+  useDebounce(()=>(setDebouncedSearchItem(searchItem)),500,[searchItem])
 
   // configuration for fetching the data
   const config = {
@@ -23,11 +30,12 @@ const App = () => {
     },
   };
   // function which fetches the  Top Movie Details from the API
-  const getMovie = async () => {
+  const getMovie = async (movieToSearch) => {
     setErrorMessage("");
     setIsLoading(true);
+   
     try {
-      const endpoint = `${BASE_URL}/discover/movie?sort_by=popularity.desc`;
+      const endpoint =movieToSearch?`${BASE_URL}/search/movie?query=${encodeURIComponent(debouncedSearchItem)}`: `${BASE_URL}/discover/movie?sort_by=popularity.desc`;
       const response = await axios.get(endpoint, config);
       const result = response.data.results;
 
@@ -42,6 +50,9 @@ const App = () => {
         throw new Error("Failed to fetch");
       }
       setMovies(result);
+      if(movieToSearch&& result.lendth > 0){
+        await updatedSearchCount(debouncedSearchItem, result[0] )
+      }
     } catch (error) {
       console.log("Error while fetching:", error.message);
       setErrorMessage("Error While Fetching The Movies. Please Try Again...");
@@ -51,11 +62,13 @@ const App = () => {
   };
 
   useEffect(() => {
-    getMovie();
-  }, []);
-  useEffect(() => {
-    console.log("Updated Movies:", allMovies);
-  }, [allMovies]);
+    getMovie(debouncedSearchItem);
+  }, [debouncedSearchItem]);
+
+
+  // useEffect(() => {
+  //   console.log("Updated Movies:", allMovies);
+  // }, [allMovies]);
 
   return (
     <main>
@@ -67,7 +80,7 @@ const App = () => {
             Find <span className="text-gradient">Movies</span> You'll Enjoy
             Without Hassel
           </h1>
-          <Search searchItem={searchItem} setSearchItem={setSearch} />
+          <Search searchItem={searchItem} setSearchItem={setSearch}  />
         </header>
         <section className="all-movies">
           <h2 className="mt-[20px]">All Movies</h2>
