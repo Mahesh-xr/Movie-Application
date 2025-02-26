@@ -11,7 +11,7 @@ const client = new Client()
 const database = new Databases(client);
 
 export const updatedSearchCount = async (searchItem, movie) => {
-  console.log("update function Triggered")
+  console.log("update function Triggered");
   try {
     const result = await database.listDocuments(DATABASE_ID, COLLECTION_ID, [
       Query.equal("searchItem", searchItem), // Fixed Query.equal syntax
@@ -23,7 +23,7 @@ export const updatedSearchCount = async (searchItem, movie) => {
         count: doc.count + 1, // Fixed property access
       });
     } else {
-     console.log("New Item")
+      console.log("New Item");
       const newDoc = await database.createDocument(
         DATABASE_ID,
         COLLECTION_ID,
@@ -32,13 +32,23 @@ export const updatedSearchCount = async (searchItem, movie) => {
           searchItem,
           count: 1,
           movie_id: movie.id,
-          poster_url:`https://image.tmdb.org/t/p/w500${movie.poster_path}`
-            
+          poster_url: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
         }
       );
       console.log(newDoc);
     }
   } catch (e) {
     console.log(e);
+  }
+};
+export const getTrendingmovies = async () => {
+  try {
+     const trendingMovie =  await database.listDocuments(DATABASE_ID, COLLECTION_ID, [
+      Query.limit(5),
+      Query.orderDesc("count"),
+    ]);
+    return trendingMovie.documents
+  } catch (error) {
+    console.log(error);
   }
 };

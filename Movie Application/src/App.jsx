@@ -1,15 +1,14 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import {useDebounce} from 'react-use'
+import { useDebounce } from "react-use";
 import Search from "./Components/Search";
 import Spinner from "./Components/Spinner";
 import MovieCard from "./Components/MovieCard";
-import { updatedSearchCount } from "./AppWrite";
+import TrendinMoviesCard from "./Components/TrendinMoviesCard";
+import { updatedSearchCount, getTrendingmovies } from "./AppWrite";
 import axios from "axios";
 
 import "./App.css";
-
-
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY; // Replace with your TMDB API key
 const BASE_URL = "https://api.themoviedb.org/3";
@@ -19,9 +18,10 @@ const App = () => {
   const [allMovies, setMovies] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [debouncedSearchItem, setDebouncedSearchItem] = useState("")
+  const [debouncedSearchItem, setDebouncedSearchItem] = useState("");
+  const [trendingMovie, setTrendingMovies] = useState([]);
 
-  useDebounce(()=>(setDebouncedSearchItem(searchItem)),500,[searchItem])
+  useDebounce(() => setDebouncedSearchItem(searchItem), 500, [searchItem]);
 
   // configuration for fetching the data
   const config = {
@@ -33,9 +33,13 @@ const App = () => {
   const getMovie = async (movieToSearch) => {
     setErrorMessage("");
     setIsLoading(true);
-   
+
     try {
-      const endpoint =movieToSearch?`${BASE_URL}/search/movie?query=${encodeURIComponent(debouncedSearchItem)}`: `${BASE_URL}/discover/movie?sort_by=popularity.desc`;
+      const endpoint = movieToSearch
+        ? `${BASE_URL}/search/movie?query=${encodeURIComponent(
+            debouncedSearchItem
+          )}`
+        : `${BASE_URL}/discover/movie?sort_by=popularity.desc`;
       const response = await axios.get(endpoint, config);
       const result = response.data.results;
 
@@ -50,8 +54,8 @@ const App = () => {
         throw new Error("Failed to fetch");
       }
       setMovies(result);
-      if(movieToSearch&& result.lendth > 0){
-        await updatedSearchCount(debouncedSearchItem, result[0] )
+      if (movieToSearch && result.length > 0) {
+        await updatedSearchCount(debouncedSearchItem, result[0]);
       }
     } catch (error) {
       console.log("Error while fetching:", error.message);
@@ -61,14 +65,28 @@ const App = () => {
     }
   };
 
+  const loadTrendingMovies = async () => {
+    try {
+      const movie = await getTrendingmovies()
+      console.log(movie)
+
+      setTrendingMovies(movie);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     getMovie(debouncedSearchItem);
   }, [debouncedSearchItem]);
 
+  useEffect(() => {
+    loadTrendingMovies();
+  }, []);
 
-  // useEffect(() => {
-  //   console.log("Updated Movies:", allMovies);
-  // }, [allMovies]);
+  useEffect(() => {
+    console.log(trendingMovie);
+  }, [trendingMovie]);
 
   return (
     <main>
@@ -80,18 +98,20 @@ const App = () => {
             Find <span className="text-gradient">Movies</span> You'll Enjoy
             Without Hassel
           </h1>
-          <Search searchItem={searchItem} setSearchItem={setSearch}  />
+          <Search searchItem={searchItem} setSearchItem={setSearch} />
         </header>
+        { trendingMovie.length> 0 && <TrendinMoviesCard  trendingMovie={trendingMovie} />}
+
         <section className="all-movies">
-          <h2 className="mt-[20px]">All Movies</h2>
+          <h2>All Movies</h2>
           {isLoading ? (
-            <Spinner/>
+            <Spinner />
           ) : errorMessage ? (
             <p className="text-red-500">{errorMessage}</p>
           ) : (
             <ul>
               {allMovies.map((movie) => (
-                <MovieCard key={movie.id} movie={movie}/>
+                <MovieCard key={movie.id} movie={movie} />
               ))}
             </ul>
           )}
